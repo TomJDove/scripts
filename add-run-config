@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# Script to add a new run configs to be run in Neovim
+#
+# Usage: add-run-config <config name> <input parameters file> <output dir>
+
+PROJECTS_DIR="/home/tom/repos"
+
+read -p "Config name: " config_name
+read -p "Input parameters file: " input_parameters_file
+read -p "Output directory: " output_dir
+
+working_directory="$(pwd)"
+project="$PROJECTS_DIR/$(ls $PROJECTS_DIR | fzf)"
+script="$(find $project | fzf)"
+
+# Create the run configs file if it doesn't exist
+run_configs="$project/run_configs.json"
+if [ ! -e $run_configs ]; then
+  echo "Creating run configs file at $run_configs"
+  echo "[]" > $run_configs
+fi
+
+new_config=$(jq -n \
+  --arg name "$config_name" \
+  --arg script "$script" \
+  --arg params "--input-parameters $input_parameters_file --output-dir $output_dir" \
+  --arg wd "$working_directory" \
+  '[{name: $name, script: $script, parameters: $params, working_directory: $wd}]')
+
+jq ". += $new_config" "$run_configs" | sponge "$run_configs"
+
+echo "Added the following run config to $project"
+echo "$new_config"
