@@ -11,8 +11,8 @@ read -p "Input parameters file: " input_parameters_file
 read -p "Output directory: " output_dir
 
 working_directory="$(pwd)"
-project="$PROJECTS_DIR/$(ls $PROJECTS_DIR | fzf)"
-script="$(find $project | fzf)"
+project="$PROJECTS_DIR/$(ls $PROJECTS_DIR | fzf --prompt="Select project: " --layout=reverse)"
+script="$(find $project | fzf --prompt "Select script to run: " --layout=reverse)"
 
 # Create the run configs file if it doesn't exist
 run_configs="$project/run_configs.json"
