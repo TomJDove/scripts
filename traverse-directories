@@ -1,6 +1,6 @@
 #!/bin/bash
-
-# traverse-directories - Interactive directory navigation using fzf
+#
+# Interactive directory navigation using fzf
 # Press Escape to exit
 
 while true; do
@@ -8,44 +8,54 @@ while true; do
     # Use find to properly handle directories, then format for display
     mapfile -t dirs < <(find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort)
 
+    # Add home directory
+    dirs=("~ (home directory)" "${dirs[@]}")
+
     # Add parent directory option if not at root
     if [[ "$PWD" != "/" ]]; then
         dirs=(".. (parent directory)" "${dirs[@]}")
     fi
 
-    # Check if there are any directories
-    if [[ ${#dirs[@]} -eq 0 ]] || [[ ${#dirs[@]} -eq 1 && "${dirs[0]}" == ".. (parent directory)" ]]; then
-        echo "No subdirectories found in $PWD"
-        read -p "Press Enter to continue or Ctrl+C to exit..."
-        continue
-    fi
-
     # Show current location and let user select directory
-    selected=$(printf '%s\n' "${dirs[@]}" | fzf \
+    # --expect captures the key pressed (alt-enter in this case)
+    result=$(printf '%s\n' "${dirs[@]}" | fzf \
         --height=40% \
         --reverse \
         --border \
         --prompt="Navigate ($PWD) > " \
-        --header="Select directory (ESC to quit)" \
+        --header="Select directory (ESC to quit, ALT+ENTER to select current)" \
+        --expect=alt-enter \
         --preview="[[ -d {} ]] && ls -lah {} 2>/dev/null || ls -lah '..' 2>/dev/null" \
         --preview-window=right:50%)
 
+    # First line is the key pressed, second line is the selection
+    key=$(echo "$result" | head -n1)
+    selected=$(echo "$result" | tail -n1)
+
     # Check if user cancelled (pressed Escape or Ctrl+C)
-    if [[ -z "$selected" ]]; then
-        echo "Exiting at: $PWD"
+    if [[ -z "$result" ]]; then
+        echo "$PWD"
         break
     fi
 
-    # Handle parent directory selection
+    # Check if user pressed shift-enter to select current directory
+    if [[ "$key" == "alt-enter" ]]; then
+        echo "$PWD"
+        break
+    fi
+
+    # Change to selected directory
     if [[ "$selected" == ".. (parent directory)" ]]; then
         cd ..
+    elif [[ "$selected" == "~ (home directory)" ]]; then
+        cd "$HOME"
     else
         # Change to selected directory
         if cd "$selected" 2>/dev/null; then
             :  # Successfully changed directory
         else
             echo "Error: Could not access directory '$selected'"
-            read -p "Press Enter to continue..."
+            read -rp "Press Enter to continue..."
         fi
     fi
 done
