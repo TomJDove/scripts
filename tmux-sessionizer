@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Source: https://github.com/ThePrimeagen/tmux-sessionizer
+
 CONFIG_FILE_NAME="tmux-sessionizer.conf"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/tmux-sessionizer"
 CONFIG_FILE="$CONFIG_DIR/$CONFIG_FILE_NAME"
@@ -342,3 +345,4 @@ if ! has_session "$selected_name"; then
 fi
 
 switch_to "$selected_name"
+
