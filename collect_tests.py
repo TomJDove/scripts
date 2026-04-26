@@ -29,7 +29,7 @@ def collect_tests(directory: Path) -> list[str]:
             ["uv", "run", "pytest", "--collect-only", "-q", directory],
             capture_output=True,
             text=True,
-            check=True,
+            check=False,
         )
     except subprocess.CalledProcessError as e:
         print(f"Error collecting tests with pytest:\n\n{e.stderr}", file=sys.stderr)
